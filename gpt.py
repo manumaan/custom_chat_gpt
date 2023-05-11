@@ -20,20 +20,24 @@ def parse_numbers(s):
     return [float(x) for x in s.strip('[]').split(',')]
 
 def return_Confluence_embeddings():
+    
     # Today's date
     today = datetime.datetime.today()
     # Current file where the embeddings of our internal Confluence document is saved
     Confluence_embeddings_file = 'DOC_title_content_embeddings.csv'
+    # If embeddings file does not exist, create it
+    if os.path.exists(Confluence_embeddings_file):
     # Run the embeddings again if the file is more than a week old
     # Otherwise, read the save file
-    Confluence_embeddings_file_date = datetime.datetime.fromtimestamp(os.path.getmtime(Confluence_embeddings_file))
-    delta = today - Confluence_embeddings_file_date
-    if delta.days > 7:
-        DOC_title_content_embeddings= internal_doc_chatbot.update_internal_doc_embeddings()
+        Confluence_embeddings_file_date = datetime.datetime.fromtimestamp(os.path.getmtime(Confluence_embeddings_file))
+        delta = today - Confluence_embeddings_file_date
+        if delta.days > 7:
+            DOC_title_content_embeddings= internal_doc_chatbot.update_internal_doc_embeddings()
+        else:
+            DOC_title_content_embeddings= pd.read_csv(Confluence_embeddings_file, dtype={'embeddings': object})
+            DOC_title_content_embeddings['embeddings'] = DOC_title_content_embeddings['embeddings'].apply(lambda x: parse_numbers(x))
     else:
-        DOC_title_content_embeddings= pd.read_csv(Confluence_embeddings_file, dtype={'embeddings': object})
-        DOC_title_content_embeddings['embeddings'] = DOC_title_content_embeddings['embeddings'].apply(lambda x: parse_numbers(x))
-
+        DOC_title_content_embeddings= internal_doc_chatbot.update_internal_doc_embeddings()
     return DOC_title_content_embeddings
 
 def process_text(query):
@@ -43,9 +47,6 @@ def process_text(query):
 
     return output, links
 
-#internal_doc_chatbot.update_internal_doc_embeddings()
 
 if __name__ == '__main__':
-   app.run()
-
-
+    app.run()
